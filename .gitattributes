@@ -1,0 +1,4 @@
+# Keep Unix line endings for scripts that run inside Linux containers / Jenkins agents
+mvnw text eol=lf
+*.sh text eol=lf
+mvnw.cmd text eol=crlf
