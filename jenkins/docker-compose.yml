@@ -1,0 +1,23 @@
+# Runs the Jenkins controller locally:  docker compose -f jenkins/docker-compose.yml up -d --build
+name: jenkins
+
+services:
+  jenkins:
+    build: .
+    image: calculator-jenkins:latest
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      # Lets pipeline steps run docker build/push/compose against the host daemon
+      - /var/run/docker.sock:/var/run/docker.sock
+    # Docker Desktop's socket is owned by root:root, so the jenkins user needs group 0 to use it
+    group_add:
+      - "0"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:
