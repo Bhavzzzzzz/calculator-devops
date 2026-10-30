@@ -102,10 +102,59 @@ docker compose down                 # stop everything
 | `IMAGE_TAG`    | `latest`     | Image tag (Jenkins sets this to the build number) |
 | `HTTP_PORT`    | `80`         | Host port Nginx is published on                  |
 
+## CI/CD pipeline (Jenkins)
+
+The declarative [Jenkinsfile](Jenkinsfile) runs on every push to GitHub:
+
+```
+GitHub push ─► Checkout ─► Build ─► Test ─► Docker Build ─► Push ─► Deploy ─► email
+                           mvnw     mvnw     :BUILD_NUMBER   Docker   compose up
+                           package  verify   + :latest       Hub      + health check
+```
+
+| Stage        | What it does                                                                                   |
+|--------------|------------------------------------------------------------------------------------------------|
+| Checkout     | Pulls the latest commit from GitHub                                                            |
+| Build        | `./mvnw clean package -DskipTests`                                                             |
+| Test         | `./mvnw verify` – tests + 80% coverage gate; publishes JUnit results and the JaCoCo report     |
+| Docker Build | Builds `bhavyajain1098/calculator` tagged with the build number and `latest`                   |
+| Push         | Logs in with the `dockerhub-creds` Jenkins credential and pushes both tags                     |
+| Deploy       | `docker compose up -d --wait`, then checks `/actuator/health` through Nginx                    |
+
+The pipeline is triggered by a GitHub webhook (`githubPush`) with `pollSCM` every 2 minutes as a fallback,
+and emails the build result (success or failure) to `NOTIFY_EMAIL`. Re-runs are safe: Compose only recreates
+containers whose image or config changed.
+
+### Running Jenkins
+
+Jenkins runs as a container that uses the host's Docker daemon through the mounted socket:
+
+```bash
+docker compose -f jenkins/docker-compose.yml up -d --build      # Jenkins on http://localhost:8080
+docker compose -f jenkins/docker-compose.yml exec jenkins \
+  cat /var/jenkins_home/secrets/initialAdminPassword           # first-run unlock password
+```
+
+One-time setup in the Jenkins UI:
+
+1. Unlock Jenkins, choose **Select plugins to install → None** (the required plugins are pre-installed), create an admin user.
+2. **Manage Jenkins → Credentials → Global → Add**: *Username with password*, ID `dockerhub-creds`,
+   username = Docker Hub user, password = a Docker Hub access token.
+3. **Manage Jenkins → System**:
+   - *Global properties → Environment variables*: add `NOTIFY_EMAIL` = address for build notifications.
+   - *Extended E-mail Notification*: SMTP server `smtp.gmail.com`, port `465`, *Use SSL*, credentials =
+     Gmail address + a Gmail **app password**. Set the same under *E-mail Notification* to send a test mail.
+4. **New Item → Pipeline**: *Pipeline script from SCM* → Git → `https://github.com/Bhavzzzzzz/calculator-devops.git`,
+   branch `*/main`, script path `Jenkinsfile`. Run **Build Now** once so the triggers are registered.
+5. Optional webhook: expose Jenkins (e.g. `ngrok http 8080`) and add
+   `https://<public-url>/github-webhook/` under the GitHub repo's *Settings → Webhooks*.
+
 ## Project structure
 
 ```
-nginx/nginx.conf                    # reverse-proxy config
+Jenkinsfile                         # declarative CI/CD pipeline
+jenkins/                            # Jenkins controller image + compose file
+nginx/                              # reverse-proxy image and config
 src/main/java/com/spe/calculator/
 ├── CalculatorApplication.java      # Spring Boot entry point
 ├── controller/                     # REST endpoints
@@ -120,4 +169,4 @@ src/test/java/com/spe/calculator/   # JUnit 5 unit tests + MockMvc integration t
 - [x] Spring Boot API with validation and JUnit tests
 - [x] Multi-stage Dockerfile
 - [x] Docker Compose deployment with Nginx reverse proxy
-- [ ] Jenkins declarative pipeline with GitHub trigger and email notifications
+- [x] Jenkins declarative pipeline with GitHub trigger and email notifications
