@@ -5,6 +5,9 @@ using Git/GitHub, Jenkins, Docker and Docker Compose.
 
 CSE 816 – Software Production Engineering, Mini-Project.
 
+- **GitHub:** https://github.com/Bhavzzzzzz/calculator-devops
+- **Docker Hub:** https://hub.docker.com/r/bhavyajain1098/calculator
+
 ## Prerequisites
 
 - JDK 17+
@@ -15,8 +18,11 @@ CSE 816 – Software Production Engineering, Mini-Project.
 ```bash
 ./mvnw clean package -DskipTests   # build the executable JAR -> target/calculator.jar
 ./mvnw test                        # run unit + integration tests (reports in target/surefire-reports)
+./mvnw verify                      # tests + JaCoCo coverage gate (min 80% line coverage)
 java -jar target/calculator.jar    # start the API on http://localhost:8080
 ```
+
+The JaCoCo coverage report is written to `target/site/jacoco/index.html`.
 
 On Windows use `mvnw.cmd` instead of `./mvnw`. The port can be changed with the `SERVER_PORT` environment variable.
 
@@ -66,8 +72,8 @@ The multi-stage [Dockerfile](Dockerfile) builds the JAR in a Maven/JDK 17 stage 
 slim `eclipse-temurin:17-jre-alpine` runtime that runs as a non-root user, with a built-in health check.
 
 ```bash
-docker build -t calculator .
-docker run -d -p 8080:8080 calculator
+docker pull bhavyajain1098/calculator:latest            # or build locally: docker build -t bhavyajain1098/calculator .
+docker run -d -p 8080:8080 bhavyajain1098/calculator
 curl "http://localhost:8080/api/v1/add?a=2&b=3"
 ```
 
@@ -92,7 +98,7 @@ docker compose down                 # stop everything
 
 | Variable       | Default      | Purpose                                          |
 |----------------|--------------|--------------------------------------------------|
-| `DOCKER_IMAGE` | `calculator` | Image name, e.g. `<dockerhub-user>/calculator`   |
+| `DOCKER_IMAGE` | `bhavyajain1098/calculator` | Docker Hub image name             |
 | `IMAGE_TAG`    | `latest`     | Image tag (Jenkins sets this to the build number) |
 | `HTTP_PORT`    | `80`         | Host port Nginx is published on                  |
 
