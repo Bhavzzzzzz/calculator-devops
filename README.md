@@ -39,7 +39,7 @@ curl "http://localhost:8080/api/v1/add?a=2&b=3"
 ```
 
 ```json
-{ "operation": "add", "a": 2.0, "b": 3.0, "result": 5.0 }
+{ "operation": "add", "a": 2, "b": 3, "result": 5 }
 ```
 
 ### Errors
