@@ -60,9 +60,46 @@ curl "http://localhost:8080/api/v1/divide?a=1&b=0"
 }
 ```
 
+## Docker
+
+The multi-stage [Dockerfile](Dockerfile) builds the JAR in a Maven/JDK 17 stage and copies only the JAR into a
+slim `eclipse-temurin:17-jre-alpine` runtime that runs as a non-root user, with a built-in health check.
+
+```bash
+docker build -t calculator .
+docker run -d -p 8080:8080 calculator
+curl "http://localhost:8080/api/v1/add?a=2&b=3"
+```
+
+## Docker Compose deployment
+
+[docker-compose.yml](docker-compose.yml) brings up the full stack on a dedicated `calc-net` bridge network:
+
+```
+client ──► nginx :80 ──► calculator replica 1 :8080
+                    └──► calculator replica 2 :8080
+```
+
+- **calculator** – 2 replicas of the API, health-checked via `/actuator/health`, `restart: unless-stopped`
+- **nginx** – reverse proxy that load-balances across the replicas; starts only once the API is healthy
+
+```bash
+docker compose up -d --build        # build and launch the stack
+docker compose ps                   # all three containers should be (healthy)
+curl -i "http://localhost/api/v1/multiply?a=6&b=7"   # X-Served-By header shows which replica answered
+docker compose down                 # stop everything
+```
+
+| Variable       | Default      | Purpose                                          |
+|----------------|--------------|--------------------------------------------------|
+| `DOCKER_IMAGE` | `calculator` | Image name, e.g. `<dockerhub-user>/calculator`   |
+| `IMAGE_TAG`    | `latest`     | Image tag (Jenkins sets this to the build number) |
+| `HTTP_PORT`    | `80`         | Host port Nginx is published on                  |
+
 ## Project structure
 
 ```
+nginx/nginx.conf                    # reverse-proxy config
 src/main/java/com/spe/calculator/
 ├── CalculatorApplication.java      # Spring Boot entry point
 ├── controller/                     # REST endpoints
@@ -75,6 +112,6 @@ src/test/java/com/spe/calculator/   # JUnit 5 unit tests + MockMvc integration t
 ## Roadmap
 
 - [x] Spring Boot API with validation and JUnit tests
-- [ ] Multi-stage Dockerfile
-- [ ] Docker Compose deployment with Nginx reverse proxy
+- [x] Multi-stage Dockerfile
+- [x] Docker Compose deployment with Nginx reverse proxy
 - [ ] Jenkins declarative pipeline with GitHub trigger and email notifications
