@@ -149,6 +149,18 @@ One-time setup in the Jenkins UI:
 5. Optional webhook: expose Jenkins (e.g. `ngrok http 8080`) and add
    `https://<public-url>/github-webhook/` under the GitHub repo's *Settings → Webhooks*.
 
+## Live demo: push to deploy
+
+1. Make a change (e.g. edit a response message), commit it on a branch and merge it into `main`.
+2. Within ~2 minutes Jenkins starts a build *"Started by an SCM change"* (instantly if the webhook is configured).
+3. Watch the stages go green in the job's Stage View; the email arrives when it finishes.
+4. Check the new version is live:
+
+```bash
+docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"   # image tag = new build number
+curl "http://localhost/api/v1/add?a=2&b=3"
+```
+
 ## Project structure
 
 ```
