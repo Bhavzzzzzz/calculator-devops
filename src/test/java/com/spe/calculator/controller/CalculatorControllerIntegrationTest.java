@@ -22,23 +22,23 @@ class CalculatorControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/add").param("a", "2").param("b", "3"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.operation").value("add"))
-                .andExpect(jsonPath("$.a").value(2.0))
-                .andExpect(jsonPath("$.b").value(3.0))
-                .andExpect(jsonPath("$.result").value(5.0));
+                .andExpect(jsonPath("$.a").value(2))
+                .andExpect(jsonPath("$.b").value(3))
+                .andExpect(jsonPath("$.result").value(5));
     }
 
     @Test
     void subtractEndpointReturnsResult() throws Exception {
         mockMvc.perform(get("/api/v1/subtract").param("a", "10").param("b", "4"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result").value(6.0));
+                .andExpect(jsonPath("$.result").value(6));
     }
 
     @Test
     void multiplyEndpointReturnsResult() throws Exception {
         mockMvc.perform(get("/api/v1/multiply").param("a", "2.5").param("b", "4"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result").value(10.0));
+                .andExpect(jsonPath("$.result").value(10));
     }
 
     @Test
