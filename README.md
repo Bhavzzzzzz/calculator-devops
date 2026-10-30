@@ -175,10 +175,3 @@ src/main/java/com/spe/calculator/
 └── exception/                      # error types and global handler
 src/test/java/com/spe/calculator/   # JUnit 5 unit tests + MockMvc integration tests
 ```
-
-## Roadmap
-
-- [x] Spring Boot API with validation and JUnit tests
-- [x] Multi-stage Dockerfile
-- [x] Docker Compose deployment with Nginx reverse proxy
-- [x] Jenkins declarative pipeline with GitHub trigger and email notifications
