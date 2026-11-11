@@ -29,7 +29,7 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build') { // produces an executable jar
             steps {
                 sh 'chmod +x mvnw'
                 sh './mvnw -B clean package -DskipTests'
@@ -52,13 +52,13 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
+        stage('Docker Build') { // builds a docker image using multi stage dockerfile
             steps {
                 sh 'docker build -t $DOCKER_IMAGE:$IMAGE_TAG -t $DOCKER_IMAGE:latest .'
             }
         }
 
-        stage('Push') {
+        stage('Push') { // logs into docker hub and pushes the image
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
                                                   usernameVariable: 'DOCKERHUB_USER',
@@ -70,7 +70,7 @@ pipeline {
                     '''
                 }
             }
-            post {
+            post { // email about success or failure
                 always {
                     sh 'docker logout || true'
                 }

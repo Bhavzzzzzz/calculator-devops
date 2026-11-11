@@ -175,3 +175,5 @@ src/main/java/com/spe/calculator/
 └── exception/                      # error types and global handler
 src/test/java/com/spe/calculator/   # JUnit 5 unit tests + MockMvc integration tests
 ```
+
+updating readme for demo
